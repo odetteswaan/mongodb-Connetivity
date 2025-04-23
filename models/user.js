@@ -1,5 +1,6 @@
 const { ObjectId } = require('mongodb');
-const { getDb } = require('../util/database')
+const { getDb } = require('../util/database');
+const { ClientHandshake } = require('mysql2/lib/commands');
 
 class User {
   constructor(username, email, cart, userID) {
@@ -40,6 +41,11 @@ class User {
 
       }
     }
+  }
+  getCart(){
+  const ids=this.cart.items.map(i=>i.productId)
+ const db=getDb()
+ return db.collection('products').find({_id:{$in:ids}}).toArray()
   }
 
 }

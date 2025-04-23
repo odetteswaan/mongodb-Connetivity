@@ -1,6 +1,6 @@
 const Product = require('../models/product');
 const User = require('../models/user');
-
+const {getDb}=require('../util/database')
 exports.getProducts = (req, res, next) => {
   Product.fetchAll()
     .then(products => {
@@ -53,21 +53,21 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  req.user
-    .getCart()
-    .then(cart => {
-      return cart
-        .getProducts()
-        .then(products => {
-          res.render('shop/cart', {
-            path: '/cart',
-            pageTitle: 'Your Cart',
-            products: products
-          });
-        })
-        .catch(err => console.log(err));
-    })
-    .catch(err => console.log(err));
+req.user.getCart().then(arr=>{
+
+  let cartArray=[];
+  for(let i=0;i<arr.length;i++){
+  const cartItem={quantity:req.user.cart.items[i].quantity,id:req.user.cart.items[i].productId,title:arr[i].title};
+  cartArray.push(cartItem)
+  }
+  console.log(cartArray)
+
+  res.render('shop/cart', {
+    path: '/cart',
+    pageTitle: 'Your Cart',
+    products: cartArray
+  });
+})
 };
 
 exports.postCart = (req, res, next) => {
@@ -75,7 +75,7 @@ exports.postCart = (req, res, next) => {
  Product.findById(prodId).then(product=>{
   req.user.addToCart(product)
  }).then(result=>{
-  res.send('good')
+  res.redirect('/cart')
  })
 };
 
