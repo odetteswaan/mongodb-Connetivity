@@ -81,60 +81,48 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  req.user
-    .getCart()
-    .then(cart => {
-      return cart.getProducts({ where: { id: prodId } });
-    })
-    .then(products => {
-      const product = products[0];
-      return product.cartItem.destroy();
-    })
-    .then(result => {
-      res.redirect('/cart');
-    })
-    .catch(err => console.log(err));
+  req.user.deleteCartItem(prodId).then(()=>{
+    console.log('Item is deleted')
+  }).catch(err=>console.log(err))
+ res.redirect('/cart')
 };
 
 exports.postOrder = (req, res, next) => {
-  let fetchedCart;
-  req.user
-    .getCart()
-    .then(cart => {
-      fetchedCart = cart;
-      return cart.getProducts();
-    })
-    .then(products => {
-      return req.user
-        .createOrder()
-        .then(order => {
-          return order.addProducts(
-            products.map(product => {
-              product.orderItem = { quantity: product.cartItem.quantity };
-              return product;
-            })
-          );
-        })
-        .catch(err => console.log(err));
-    })
-    .then(result => {
-      return fetchedCart.setProducts(null);
-    })
-    .then(result => {
-      res.redirect('/orders');
-    })
-    .catch(err => console.log(err));
+req.user.addOrder().then(result=>{
+  res.redirect('/orders')
+})
 };
 
 exports.getOrders = (req, res, next) => {
-  req.user
-    .getOrders({include: ['products']})
-    .then(orders => {
-      res.render('shop/orders', {
+  // req.user
+    // .getOrders({include: ['products']})
+    // .then(orders => {
+    //   res.render('shop/orders', {
+    //     path: '/orders',
+    //     pageTitle: 'Your Orders',
+    //     orders: orders
+    //   });
+    // })
+    // .catch(err => console.log(err));
+    req.user.getOrders().then(result=>{
+      console.log('==================================')
+      const order=[];
+      result.map(item=>{
+        const Order_id=item._id.toString();
+        const product=[]
+        item.items.map(prod=>{
+            const quantity=prod.quantity;
+            const title=prod.title;
+            product.push({quantity:quantity,title:title});
+        })
+        order.push({id:Order_id,products:product})
+      })
+       res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',
-        orders: orders
+        orders: order
       });
     })
-    .catch(err => console.log(err));
+     
+
 };
